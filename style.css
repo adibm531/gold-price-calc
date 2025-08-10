@@ -1,0 +1,56 @@
+body {
+  font-family: Arial, sans-serif;
+  max-width: 600px;
+  margin: auto;
+  padding: 1rem;
+  background: #f9f9f9;
+  color: #222;
+}
+
+h1, h2 {
+  text-align: center;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+form {
+  display: grid;
+  grid-gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+label {
+  font-weight: bold;
+}
+
+input, select, button {
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
+button {
+  background: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0056b3;
+}
+
+#result {
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-align: center;
+}
