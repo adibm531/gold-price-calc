@@ -1,120 +1,59 @@
-const PRICE_JSON = 'prices.json';
-
 // Constants for conversions
 const GRAMS_PER_BHORI = 11.664;
 const GRAMS_PER_ANA = 0.729;
 
-let prices = {};
-let currentSort = { index: null, asc: true };
+// Keys for localStorage
+const STORAGE_KEY = 'goldPrices';
 
-async function loadPrices() {
-  try {
-    const res = await fetch(PRICE_JSON + '?cache=' + Date.now());
-    prices = await res.json();
-    displayPrices();
-    makeHeadersSortable();
-  } catch (err) {
-    console.error('Failed to load prices:', err);
-    document.getElementById('price-table-body').innerHTML = '<tr><td colspan="4">Failed to load prices</td></tr>';
+let prices = {
+  "22": 0,
+  "21": 0,
+  "18": 0,
+  "traditional": 0
+};
+
+// Load prices from localStorage or use defaults
+function loadPricesFromStorage() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    try {
+      prices = JSON.parse(stored);
+    } catch {
+      // ignore parse errors and keep defaults
+    }
   }
 }
 
-function displayPrices(sortedArray) {
+// Save prices to localStorage
+function savePricesToStorage() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(prices));
+}
+
+// Update the table display
+function displayPrices() {
   const tbody = document.getElementById('price-table-body');
   tbody.innerHTML = '';
 
-  // Prepare data array
-  let data = [];
   for (const key of ['22', '21', '18', 'traditional']) {
-    const priceGram = prices[key];
-    if (!priceGram) continue;
+    const priceGram = prices[key] || 0;
 
-    data.push({
-      karat: key === 'traditional' ? 'Traditional' : key + 'K',
-      gram: priceGram,
-      ana: priceGram * GRAMS_PER_ANA,
-      bhori: priceGram * GRAMS_PER_BHORI,
-    });
-  }
+    const priceAna = priceGram * GRAMS_PER_ANA;
+    const priceBhori = priceGram * GRAMS_PER_BHORI;
 
-  if (sortedArray) data = sortedArray;
+    const karatName = key === 'traditional' ? 'Traditional' : key + 'K';
 
-  for (const row of data) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${row.karat}</td>
-      <td>${row.gram.toFixed(2)}</td>
-      <td>${row.ana.toFixed(2)}</td>
-      <td>${row.bhori.toFixed(2)}</td>
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${karatName}</td>
+      <td>${priceGram.toFixed(2)}</td>
+      <td>${priceAna.toFixed(2)}</td>
+      <td>${priceBhori.toFixed(2)}</td>
     `;
-    tbody.appendChild(tr);
+    tbody.appendChild(row);
   }
 }
 
-function makeHeadersSortable() {
-  const headers = document.querySelectorAll('thead th');
-  headers.forEach((th, idx) => {
-    th.style.cursor = 'pointer';
-    th.onclick = () => {
-      sortTableByColumn(idx);
-    };
-  });
-}
-
-function sortTableByColumn(index) {
-  // Toggle sorting direction if same column clicked
-  if (currentSort.index === index) {
-    currentSort.asc = !currentSort.asc;
-  } else {
-    currentSort.index = index;
-    currentSort.asc = true;
-  }
-
-  // Prepare data array same as displayPrices
-  let data = [];
-  for (const key of ['22', '21', '18', 'traditional']) {
-    const priceGram = prices[key];
-    if (!priceGram) continue;
-
-    data.push({
-      karat: key === 'traditional' ? 'Traditional' : key + 'K',
-      gram: priceGram,
-      ana: priceGram * GRAMS_PER_ANA,
-      bhori: priceGram * GRAMS_PER_BHORI,
-    });
-  }
-
-  // Sort data by clicked column
-  data.sort((a, b) => {
-    let valA, valB;
-
-    switch (index) {
-      case 0: // Karat column (string)
-        valA = a.karat.toLowerCase();
-        valB = b.karat.toLowerCase();
-        return currentSort.asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-      case 1: // Gram column (number)
-        valA = a.gram;
-        valB = b.gram;
-        break;
-      case 2: // Ana column (number)
-        valA = a.ana;
-        valB = b.ana;
-        break;
-      case 3: // Bhori column (number)
-        valA = a.bhori;
-        valB = b.bhori;
-        break;
-      default:
-        return 0;
-    }
-
-    return currentSort.asc ? valA - valB : valB - valA;
-  });
-
-  displayPrices(data);
-}
-
+// Calculator logic
 function calculatePrice(amount, unit, karat) {
   let priceGram = prices[karat];
   if (!priceGram) return null;
@@ -135,6 +74,7 @@ function calculatePrice(amount, unit, karat) {
   return grams * priceGram;
 }
 
+// Handle calculator form submit
 document.getElementById('calc-form').addEventListener('submit', e => {
   e.preventDefault();
 
@@ -156,4 +96,31 @@ document.getElementById('calc-form').addEventListener('submit', e => {
   document.getElementById('result').textContent = `Price: BDT ${price.toFixed(2)}`;
 });
 
-window.onload = loadPrices;
+// Handle price update form submit
+document.getElementById('price-update-form').addEventListener('submit', e => {
+  e.preventDefault();
+
+  // Read inputs
+  prices['22'] = parseFloat(document.getElementById('price-22').value) || 0;
+  prices['21'] = parseFloat(document.getElementById('price-21').value) || 0;
+  prices['18'] = parseFloat(document.getElementById('price-18').value) || 0;
+  prices['traditional'] = parseFloat(document.getElementById('price-traditional').value) || 0;
+
+  savePricesToStorage();
+  displayPrices();
+
+  document.getElementById('update-msg').textContent = 'Prices updated successfully!';
+  setTimeout(() => { document.getElementById('update-msg').textContent = ''; }, 3000);
+});
+
+// On page load
+window.onload = () => {
+  loadPricesFromStorage();
+  displayPrices();
+
+  // Pre-fill the update form inputs with current prices
+  document.getElementById('price-22').value = prices['22'];
+  document.getElementById('price-21').value = prices['21'];
+  document.getElementById('price-18').value = prices['18'];
+  document.getElementById('price-traditional').value = prices['traditional'];
+};
