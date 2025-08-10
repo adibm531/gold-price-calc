@@ -5,40 +5,114 @@ const GRAMS_PER_BHORI = 11.664;
 const GRAMS_PER_ANA = 0.729;
 
 let prices = {};
+let currentSort = { index: null, asc: true };
 
 async function loadPrices() {
   try {
     const res = await fetch(PRICE_JSON + '?cache=' + Date.now());
     prices = await res.json();
     displayPrices();
+    makeHeadersSortable();
   } catch (err) {
     console.error('Failed to load prices:', err);
     document.getElementById('price-table-body').innerHTML = '<tr><td colspan="4">Failed to load prices</td></tr>';
   }
 }
 
-function displayPrices() {
+function displayPrices(sortedArray) {
   const tbody = document.getElementById('price-table-body');
   tbody.innerHTML = '';
 
+  // Prepare data array
+  let data = [];
   for (const key of ['22', '21', '18', 'traditional']) {
     const priceGram = prices[key];
     if (!priceGram) continue;
 
-    const priceAna = priceGram * GRAMS_PER_ANA;
-    const priceBhori = priceGram * GRAMS_PER_BHORI;
-
-    const karatName = key === 'traditional' ? 'Traditional' : key + 'K';
-
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${karatName}</td>
-      <td>${priceGram.toFixed(2)}</td>
-      <td>${priceAna.toFixed(2)}</td>
-      <td>${priceBhori.toFixed(2)}</td>
-    `;
-    tbody.appendChild(row);
+    data.push({
+      karat: key === 'traditional' ? 'Traditional' : key + 'K',
+      gram: priceGram,
+      ana: priceGram * GRAMS_PER_ANA,
+      bhori: priceGram * GRAMS_PER_BHORI,
+    });
   }
+
+  if (sortedArray) data = sortedArray;
+
+  for (const row of data) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${row.karat}</td>
+      <td>${row.gram.toFixed(2)}</td>
+      <td>${row.ana.toFixed(2)}</td>
+      <td>${row.bhori.toFixed(2)}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function makeHeadersSortable() {
+  const headers = document.querySelectorAll('thead th');
+  headers.forEach((th, idx) => {
+    th.style.cursor = 'pointer';
+    th.onclick = () => {
+      sortTableByColumn(idx);
+    };
+  });
+}
+
+function sortTableByColumn(index) {
+  // Toggle sorting direction if same column clicked
+  if (currentSort.index === index) {
+    currentSort.asc = !currentSort.asc;
+  } else {
+    currentSort.index = index;
+    currentSort.asc = true;
+  }
+
+  // Prepare data array same as displayPrices
+  let data = [];
+  for (const key of ['22', '21', '18', 'traditional']) {
+    const priceGram = prices[key];
+    if (!priceGram) continue;
+
+    data.push({
+      karat: key === 'traditional' ? 'Traditional' : key + 'K',
+      gram: priceGram,
+      ana: priceGram * GRAMS_PER_ANA,
+      bhori: priceGram * GRAMS_PER_BHORI,
+    });
+  }
+
+  // Sort data by clicked column
+  data.sort((a, b) => {
+    let valA, valB;
+
+    switch (index) {
+      case 0: // Karat column (string)
+        valA = a.karat.toLowerCase();
+        valB = b.karat.toLowerCase();
+        return currentSort.asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      case 1: // Gram column (number)
+        valA = a.gram;
+        valB = b.gram;
+        break;
+      case 2: // Ana column (number)
+        valA = a.ana;
+        valB = b.ana;
+        break;
+      case 3: // Bhori column (number)
+        valA = a.bhori;
+        valB = b.bhori;
+        break;
+      default:
+        return 0;
+    }
+
+    return currentSort.asc ? valA - valB : valB - valA;
+  });
+
+  displayPrices(data);
 }
 
 function calculatePrice(amount, unit, karat) {
@@ -83,37 +157,3 @@ document.getElementById('calc-form').addEventListener('submit', e => {
 });
 
 window.onload = loadPrices;
-document.querySelectorAll('th').forEach(th => {
-  th.style.cursor = 'pointer';
-  th.addEventListener('click', () => {
-    const table = th.closest('table');
-    const tbody = table.querySelector('tbody');
-    const index = Array.from(th.parentNode.children).indexOf(th);
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-    const isNumeric = index !== 0;
-
-    // Toggle ascending/descending
-    const currentSort = th.getAttribute('data-sort') || 'desc';
-    const newSort = currentSort === 'asc' ? 'desc' : 'asc';
-    th.setAttribute('data-sort', newSort);
-
-    rows.sort((a, b) => {
-      const aText = a.children[index].textContent.trim();
-      const bText = b.children[index].textContent.trim();
-
-      if (isNumeric) {
-        return newSort === 'asc' ? aText - bText : bText - aText;
-      } else {
-        return newSort === 'asc' ? aText.localeCompare(bText) : bText.localeCompare(aText);
-      }
-    });
-
-    // Remove sort attribute from other headers
-    table.querySelectorAll('th').forEach(header => {
-      if (header !== th) header.removeAttribute('data-sort');
-    });
-
-    // Append sorted rows
-    rows.forEach(row => tbody.appendChild(row));
-  });
-});
