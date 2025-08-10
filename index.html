@@ -11,13 +11,9 @@
     }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f9fafb;
-      color: #333;
-      margin: 0;
-      padding: 20px;
+      margin: 20px;
       max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
+      color: #333;
     }
     h1, h2 {
       color: #1a73e8;
@@ -26,32 +22,27 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
       background: white;
       border-radius: 6px;
       overflow: hidden;
       box-shadow: 0 1px 5px rgb(0 0 0 / 0.1);
     }
     th, td {
-      padding: 12px 15px;
+      border: 1px solid #ddd;
+      padding: 8px;
       text-align: center;
-      border-bottom: 1px solid #e2e8f0;
     }
     th {
       background-color: #e8f0fe;
       font-weight: 600;
-      cursor: default;
-      user-select: none;
-    }
-    tr:last-child td {
-      border-bottom: none;
     }
     form {
+      margin-bottom: 20px;
       background: white;
       padding: 20px;
       border-radius: 6px;
       box-shadow: 0 1px 8px rgb(0 0 0 / 0.1);
-      margin-bottom: 30px;
     }
     label {
       display: block;
@@ -94,23 +85,13 @@
       font-weight: 700;
       font-size: 1.25rem;
       color: #1a73e8;
-      margin-top: 15px;
+      margin-top: 10px;
       min-height: 1.5em;
     }
     #update-msg {
       margin-top: 10px;
       font-weight: 600;
       color: #2f855a;
-    }
-    /* Responsive tweaks */
-    @media (max-width: 480px) {
-      body {
-        padding: 15px;
-        max-width: 100%;
-      }
-      button {
-        font-size: 1rem;
-      }
     }
   </style>
 </head>
@@ -119,7 +100,7 @@
   <h1>Gold Price Calculator</h1>
 
   <!-- Price Table -->
-  <table aria-label="Gold Prices Table">
+  <table>
     <thead>
       <tr>
         <th>Karat</th>
@@ -134,51 +115,51 @@
   </table>
 
   <!-- Calculator -->
-  <section aria-label="Gold Price Calculator Section">
+  <section>
     <h2>Calculate Price</h2>
-    <form id="calc-form" aria-describedby="result">
+    <form id="calc-form">
       <label for="karat">Select Karat:</label>
       <select id="karat" required>
         <option value="22">22K</option>
         <option value="21">21K</option>
         <option value="18">18K</option>
         <option value="traditional">Traditional</option>
-      </select>
+      </select><br/>
 
       <label for="unit">Select Unit:</label>
       <select id="unit" required>
         <option value="gram">Gram</option>
         <option value="ana">Ana</option>
         <option value="bhori">Bhori</option>
-      </select>
+      </select><br/>
 
       <label for="amount">Amount:</label>
-      <input type="number" id="amount" min="0" step="any" required />
+      <input type="number" id="amount" min="0" step="any" required /><br/>
 
       <button type="submit">Calculate</button>
     </form>
-    <div id="result" aria-live="polite"></div>
+    <div id="result"></div>
   </section>
 
   <!-- Manual Price Update -->
-  <section id="update-prices" aria-label="Update Gold Prices Section">
+  <section id="update-prices">
     <h2>Update Gold Prices (Per Gram)</h2>
     <form id="price-update-form">
       <label for="price-22">22K:</label>
-      <input type="number" id="price-22" min="0" step="any" required />
+      <input type="number" id="price-22" min="0" step="any" required /><br/>
 
       <label for="price-21">21K:</label>
-      <input type="number" id="price-21" min="0" step="any" required />
+      <input type="number" id="price-21" min="0" step="any" required /><br/>
 
       <label for="price-18">18K:</label>
-      <input type="number" id="price-18" min="0" step="any" required />
+      <input type="number" id="price-18" min="0" step="any" required /><br/>
 
       <label for="price-traditional">Traditional:</label>
-      <input type="number" id="price-traditional" min="0" step="any" required />
+      <input type="number" id="price-traditional" min="0" step="any" required /><br/>
 
       <button type="submit">Save Prices</button>
     </form>
-    <p id="update-msg" role="alert"></p>
+    <p id="update-msg"></p>
   </section>
 
   <script src="script.js"></script>
