@@ -83,3 +83,37 @@ document.getElementById('calc-form').addEventListener('submit', e => {
 });
 
 window.onload = loadPrices;
+document.querySelectorAll('th').forEach(th => {
+  th.style.cursor = 'pointer';
+  th.addEventListener('click', () => {
+    const table = th.closest('table');
+    const tbody = table.querySelector('tbody');
+    const index = Array.from(th.parentNode.children).indexOf(th);
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const isNumeric = index !== 0;
+
+    // Toggle ascending/descending
+    const currentSort = th.getAttribute('data-sort') || 'desc';
+    const newSort = currentSort === 'asc' ? 'desc' : 'asc';
+    th.setAttribute('data-sort', newSort);
+
+    rows.sort((a, b) => {
+      const aText = a.children[index].textContent.trim();
+      const bText = b.children[index].textContent.trim();
+
+      if (isNumeric) {
+        return newSort === 'asc' ? aText - bText : bText - aText;
+      } else {
+        return newSort === 'asc' ? aText.localeCompare(bText) : bText.localeCompare(aText);
+      }
+    });
+
+    // Remove sort attribute from other headers
+    table.querySelectorAll('th').forEach(header => {
+      if (header !== th) header.removeAttribute('data-sort');
+    });
+
+    // Append sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+  });
+});
